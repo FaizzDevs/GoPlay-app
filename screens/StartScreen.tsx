@@ -1,7 +1,7 @@
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { Image, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 import React, { useRef } from 'react'
 import { useNavigation } from '@react-navigation/native'
-import MapView from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 
 const StartScreen = () => {
     const navigation = useNavigation();
@@ -21,8 +21,8 @@ const StartScreen = () => {
         },
     ]
     const BANGALORE_COORDS = {
-        latitude: 12.9916987,
-        longitude: 77.5945627,
+        latitude: -6.984283,
+        longitude: 110.409358,
     }
 
     const generateCircularPoints = (center, radius, numPoints) => {
@@ -31,19 +31,53 @@ const StartScreen = () => {
 
         for (let i = 0; i < numPoints; i++){
             const angle = i * angleStep;
+            const latitude = center.latitude + (radius/111) * Math.cos(angle)
+            const longitude = center.longitude + (radius / (111 * Math.cos(center.latitude))) * Math.sin(angle)
+            points.push({ latitude, longitude })
         }
 
+        return points;
+
     }
-
-
-  
-
     const circularPoints = generateCircularPoints(BANGALORE_COORDS, 5, 6)
 
     return (
         <SafeAreaView className="flex-1 bg-white">
-            <MapView>
-
+            <MapView
+                ref={ mapView }
+                initialRegion={{
+                    latitude: BANGALORE_COORDS.latitude,
+                    longitude: BANGALORE_COORDS.longitude,
+                    latitudeDelta: 0.0922,
+                    longitudeDelta: 0.0421
+                }}
+                style={{ 
+                    width: "100%", 
+                    height: 400 
+                }}
+            >
+                {circularPoints?.map((point, index) => {
+                    const user = users[index % users.length]
+                    return (
+                        <Marker
+                            key={index}
+                            coordinate={point}
+                        >
+                            <View>
+                                <Image 
+                                    source={{ uri: user?.image }} 
+                                    className="w-[70px] h-[70px] rounded-full"
+                                    resizeMode="cover"
+                                />
+                            </View>
+                            <View className="bg-white px-3 py-2 rounded-md mt-1">
+                                <Text className="text-sm font-medium text-center">
+                                    {user.description}
+                                </Text>
+                            </View>
+                        </Marker>
+                    )
+                })}
             </MapView>
         </SafeAreaView>
     )
